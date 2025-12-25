@@ -519,6 +519,9 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    // Prepare share button data attributes (escape quotes for HTML attributes)
+    const shareDataAttrs = `data-activity="${name}" data-description="${details.description.replace(/"/g, '&quot;')}" data-schedule="${formattedSchedule.replace(/"/g, '&quot;')}"`;
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -553,15 +556,15 @@ document.addEventListener("DOMContentLoaded", () => {
         </ul>
       </div>
       <div class="share-buttons">
-        <button class="share-button share-twitter tooltip" data-activity="${name}" data-description="${details.description.replace(/"/g, '&quot;')}" data-schedule="${formattedSchedule.replace(/"/g, '&quot;')}">
+        <button class="share-button share-twitter tooltip" ${shareDataAttrs}>
           <span class="share-icon">🐦</span>
           <span class="tooltip-text">Share on Twitter</span>
         </button>
-        <button class="share-button share-facebook tooltip" data-activity="${name}" data-description="${details.description.replace(/"/g, '&quot;')}" data-schedule="${formattedSchedule.replace(/"/g, '&quot;')}">
+        <button class="share-button share-facebook tooltip" ${shareDataAttrs}>
           <span class="share-icon">📘</span>
           <span class="tooltip-text">Share on Facebook</span>
         </button>
-        <button class="share-button share-link tooltip" data-activity="${name}" data-description="${details.description.replace(/"/g, '&quot;')}" data-schedule="${formattedSchedule.replace(/"/g, '&quot;')}">
+        <button class="share-button share-link tooltip" ${shareDataAttrs}>
           <span class="share-icon">🔗</span>
           <span class="tooltip-text">Copy link to share</span>
         </button>
@@ -826,8 +829,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const description = button.dataset.description;
     const schedule = button.dataset.schedule;
     
-    // Create shareable URL - using the current page URL
-    const shareUrl = window.location.href;
+    // Create shareable URL - use clean base URL without query params or hash
+    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    const shareUrl = baseUrl;
     
     // Create share text
     const shareText = `Check out ${activityName} at Mergington High School! ${description} Schedule: ${schedule}`;
@@ -864,6 +868,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   // Fallback copy to clipboard for older browsers
+  // Note: Uses deprecated document.execCommand('copy') as fallback for browsers without Clipboard API
   function fallbackCopyToClipboard(text) {
     const textArea = document.createElement('textarea');
     textArea.value = text;
@@ -874,6 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
     textArea.select();
     
     try {
+      // execCommand is deprecated but kept as fallback for older browsers
       const successful = document.execCommand('copy');
       if (successful) {
         showMessage('Link copied to clipboard! You can now share it with your friends.', 'success');
