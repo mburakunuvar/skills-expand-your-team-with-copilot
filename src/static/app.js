@@ -304,6 +304,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return details.schedule;
   }
 
+  // Helper function to escape HTML special characters to prevent XSS
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Function to determine activity type (this would ideally come from backend)
   function getActivityType(activityName, description) {
     const name = activityName.toLowerCase();
@@ -519,8 +526,8 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    // Prepare share button data attributes (escape quotes for HTML attributes)
-    const shareDataAttrs = `data-activity="${name}" data-description="${details.description.replace(/"/g, '&quot;')}" data-schedule="${formattedSchedule.replace(/"/g, '&quot;')}"`;
+    // Prepare share button data attributes (properly escape HTML for security)
+    const shareDataAttrs = `data-activity="${escapeHtml(name)}" data-description="${escapeHtml(details.description)}" data-schedule="${escapeHtml(formattedSchedule)}"`;
 
     activityCard.innerHTML = `
       ${tagHtml}
@@ -840,11 +847,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (button.classList.contains('share-twitter')) {
       // Share on Twitter
       const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
-      window.open(twitterUrl, '_blank', 'width=550,height=420');
+      window.open(twitterUrl, '_blank', 'noopener,noreferrer,width=550,height=420');
     } else if (button.classList.contains('share-facebook')) {
       // Share on Facebook
       const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-      window.open(facebookUrl, '_blank', 'width=550,height=420');
+      window.open(facebookUrl, '_blank', 'noopener,noreferrer,width=550,height=420');
     } else if (button.classList.contains('share-link')) {
       // Copy link to clipboard
       const textToCopy = `${shareText}\n${shareUrl}`;
