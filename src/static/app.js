@@ -837,10 +837,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const schedule = button.dataset.schedule;
     
     // Create shareable URL - use clean base URL without query params or hash
-    const baseUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
-    const shareUrl = baseUrl;
+    const shareUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
     
-    // Create share text
+    // Create share text (URL encoding will be applied when needed)
     const shareText = `Check out ${activityName} at Mergington High School! ${description} Schedule: ${schedule}`;
     
     // Determine which share button was clicked
@@ -880,7 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
+    textArea.style.left = '-999999px'; // Position off-screen to avoid visual flash
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
