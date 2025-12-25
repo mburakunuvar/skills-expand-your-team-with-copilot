@@ -447,11 +447,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      // Apply category filter
-      if (currentFilter !== "all" && activityType !== currentFilter) {
-        return;
-      }
-
       // Apply weekend filter if selected
       if (currentTimeRange === "weekend" && details.schedule_details) {
         const activityDays = details.schedule_details.days;
