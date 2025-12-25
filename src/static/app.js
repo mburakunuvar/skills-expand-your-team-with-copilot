@@ -304,6 +304,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return details.schedule;
   }
 
+  // Helper function to escape HTML special characters to prevent XSS
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Function to determine activity type (this would ideally come from backend)
   function getActivityType(activityName, description) {
     const name = activityName.toLowerCase();
@@ -519,6 +526,9 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
+    // Prepare share button data attributes (properly escape HTML for security)
+    const shareDataAttrs = `data-activity="${escapeHtml(name)}" data-description="${escapeHtml(details.description)}" data-schedule="${escapeHtml(formattedSchedule)}"`;
+
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
@@ -551,6 +561,20 @@ document.addEventListener("DOMContentLoaded", () => {
             )
             .join("")}
         </ul>
+      </div>
+      <div class="share-buttons">
+        <button class="share-button share-twitter tooltip" ${shareDataAttrs}>
+          <span class="share-icon">🐦</span>
+          <span class="tooltip-text">Share on Twitter</span>
+        </button>
+        <button class="share-button share-facebook tooltip" ${shareDataAttrs}>
+          <span class="share-icon">📘</span>
+          <span class="tooltip-text">Share on Facebook</span>
+        </button>
+        <button class="share-button share-link tooltip" ${shareDataAttrs}>
+          <span class="share-icon">🔗</span>
+          <span class="tooltip-text">Copy link to share</span>
+        </button>
       </div>
       <div class="activity-card-actions">
         ${
@@ -586,6 +610,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", handleShare);
+    });
 
     activitiesList.appendChild(activityCard);
   }
@@ -797,6 +827,77 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     );
+  }
+
+  // Handle social sharing
+  function handleShare(event) {
+    const button = event.currentTarget;
+    const activityName = button.dataset.activity;
+    const description = button.dataset.description;
+    const schedule = button.dataset.schedule;
+    
+    // Create shareable URL - use clean base URL without query params or hash
+    const shareUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    
+    // Create share text (URL encoding will be applied when needed)
+    const shareText = `Check out ${activityName} at Mergington High School! ${description} Schedule: ${schedule}`;
+    
+    // Determine which share button was clicked
+    if (button.classList.contains('share-twitter')) {
+      // Share on Twitter
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+      window.open(twitterUrl, '_blank', 'noopener,noreferrer,width=550,height=420');
+    } else if (button.classList.contains('share-facebook')) {
+      // Share on Facebook
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+      window.open(facebookUrl, '_blank', 'noopener,noreferrer,width=550,height=420');
+    } else if (button.classList.contains('share-link')) {
+      // Copy link to clipboard
+      const textToCopy = `${shareText}\n${shareUrl}`;
+      
+      // Use modern clipboard API if available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy)
+          .then(() => {
+            showMessage('Link copied to clipboard! You can now share it with your friends.', 'success');
+          })
+          .catch((err) => {
+            console.error('Failed to copy:', err);
+            // Fallback to older method
+            fallbackCopyToClipboard(textToCopy);
+          });
+      } else {
+        // Fallback for older browsers
+        fallbackCopyToClipboard(textToCopy);
+      }
+    }
+  }
+  
+  // Fallback copy to clipboard for older browsers
+  // Note: Uses deprecated document.execCommand('copy') as fallback for browsers without Clipboard API
+  function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px'; // Position off-screen to avoid visual flash
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      // execCommand is deprecated but kept as fallback for older browsers
+      const successful = document.execCommand('copy');
+      if (successful) {
+        showMessage('Link copied to clipboard! You can now share it with your friends.', 'success');
+      } else {
+        showMessage('Failed to copy link. Please copy manually.', 'error');
+      }
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showMessage('Failed to copy link. Please copy manually.', 'error');
+    }
+    
+    document.body.removeChild(textArea);
   }
 
   // Show message function
